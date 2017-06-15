@@ -10,6 +10,17 @@ if(process.argv.length < 4){
   process.exit()
 }
 
+for(let i = 3; i<4; i++){
+  if(process.argv[i].substr(-1,1) != '/'){ 
+    process.argv[i] += '/' 
+  }
+}
+
+//Check if output folder exists
+if (!fs.existsSync(process.argv[3])) {
+  fs.mkdirSync(process.argv[3]);
+}
+
 let progress_bar = new _progress.Bar({}, _progress.Presets.shades_classic)
 
 let width = 1000,

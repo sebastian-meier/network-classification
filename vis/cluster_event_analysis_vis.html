@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title></title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <style>
+      svg{
+        float:left;
+        clear:both;
+        border:1px solid black;
+      }
+
+      rect{
+        stroke:rgba(0,0,0,0.2);
+      }
+
+      text{
+        font-size:10px;
+        font-family: Helvetica, Arial, sans-serif;
+      }
+    </style>
+</head>
+<body>
+<input type="text" placeholder="PATH/FILE.geojson" value="./test_output/009.geojson" id="filename" />
+<input type="button" value="Visualise!" id="vis_button" />
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script>
+
+//matches
+let m_width = 800, m_height = 300, padding = 50,
+  m_svg = d3.select('body').append('svg').attr('id','m_svg').attr('width',m_width).attr('height',m_height).append('g').attr('transform','translate('+padding+','+padding*2+')');
+
+d3.select('#vis_button').on('click', function(){ buildMap(); });
+
+function buildMap(){
+  var file = document.getElementById("filename").value;
+  if(file.length > 2){
+
+    if(file.substr(-1,1) != '/'){ 
+      file += '/' 
+    }
+
+d3.csv(file+'cluster_event_results.csv', (err, data) => {
+  if(err){ console.log(err); }
+
+  let bins = []
+
+  data.forEach( d => { d.match = +d.match })
+
+  data.forEach( d => {
+    if(!(d.match in bins)){
+      bins[d.match] = 0
+    }
+    bins[d.match]++
+  })
+
+  let sum = 0, bin_max = 0
+  for(let bin in bins){
+    sum += bins[bin]
+    if(bin > bin_max){
+      bin_max = bin
+    }
+  }
+
+  let x = d3.scaleLinear().domain([0,sum]).range([0,m_width-2*padding]),
+    color = d3.scaleLinear().domain([-1,0,1,2,3,4,5,bin_max]).range(['#000000','#3288bd','#99d594','#e6f598','#ffffbf','#fee08b','#fc8d59','#d53e4f'])
+
+  let r = m_svg.append('g'),
+    t = m_svg.append('g')
+
+  let t_x = 0
+  for(let bin in bins){
+    r.append('rect')
+      .attr('x',x(t_x))
+      .attr('width',x(bins[bin]))
+      .attr('y',0)
+      .attr('height',20)
+      .style('fill',color(bin))
+
+    t.append('text')
+      .attr('transform','translate('+x(t_x)+',-8) rotate(-45)')
+      .text(((bin == 0)?'Correct':(bin+' off'))+' '+((bins[bin]/sum)*100).toFixed(2)+"%")
+      .style('font-size',10)
+      .style('font-family','Helvetica, Arial, sans-serif')
+    
+
+    t_x += bins[bin]
+
+  }
+});
+
+let categories = {}, cluster = {}, lc_keys = {}
+
+d3.csv('../material/foursquare_categories.csv', function(err, data){
+  if(err){ console.log(err); }
+
+  data.forEach(d => {
+    categories[d.id] = {name:d.name, parent:d.parent}
+  })
+
+  d3.json('../material/categories.json', function(err, data){
+    if(err){ console.log(err); }
+
+    lc_keys = data
+
+    d3.csv(file+'cluster_events.csv', function(err, data){
+      //cluster,type,fs_id,location_id,start_10_min,end_10_min,day_of_week,duration
+      if(err){ console.log(err); }
+
+      let data_keys = {}
+
+      data.forEach( d => {
+        data_keys[d.location_id] = d
+        if(d.fs_id in lc_keys){
+          d['category'] = getCategory(lc_keys[d.fs_id][0].id)
+        }else{
+          d['category'] = d.location_id
+        }
+      })
+      
+      data.forEach( d => {
+        if(!(d.cluster in cluster)){
+          cluster[d.cluster] = {overall:emptyWeek(), location:{}, category:{}}
+        }
+        if(!(d.location_id in cluster[d.cluster].location)){
+          cluster[d.cluster].location[d.location_id] = emptyWeek()
+        }
+        if(!(d.category in cluster[d.cluster].category)){
+          cluster[d.cluster].category[d.category] = emptyWeek()
+        }
+
+        let s = d.start_10_min, dur = 0, w = d.day_of_week
+        while(dur < d.duration){
+          cluster[d.cluster].location[d.location_id][w][s]++
+          cluster[d.cluster].category[d.category][w][s]++
+          dur++
+          s++
+          if(s>144){
+            s = 0
+            w++
+            if(w>6){
+              w = 0
+            }
+          }
+        }
+      })
+
+      let type = 'category'
+
+      let w_width = 10, w_height = 2,
+        s_width = w_width*7, s_height = w_height*144
+
+      for(let c in cluster){
+        let count = 0
+
+        let max = {}
+        for(let item in cluster[c][type]){
+          count++
+        }
+
+        let svg = d3.select('body').append('svg').attr('title',count).attr('width',(Math.ceil(Math.sqrt(count))*(s_width+padding)+padding)).attr('height',(Math.ceil(Math.sqrt(count))*(s_height+padding)+padding)).append('g').attr('transform','translate('+padding+','+padding+')')
+        svg.append('text').text(c+' / '+count).attr('transform','translate(0,-25)')
+
+        let xc = 0, yc = 0
+        for(let item in cluster[c][type]){
+          let max = d3.max(cluster[c][type][item], function(d){ return d3.max(d) })
+          let color = d3.scaleLinear().domain([0,max]).range(['rgb(255,255,255)','rgb(255,0,0)'])
+
+          let t_svg = svg.append('g').attr('transform','translate('+(xc*(s_width+padding))+','+(yc*(s_height+padding))+')')
+
+          t_svg.append('text').text((isNaN(item))?item:data_keys[item].name).attr('transform','translate(0,-10)')
+
+          let days = t_svg.selectAll('g').data(cluster[c][type][item]).enter().append('g')
+            .attr('transform',function(d,i){
+              return 'translate('+(i*w_width)+',0)'
+            })
+
+          days.selectAll('rect').data(function(d){return d}).enter().append('rect')
+            .attr('x',0)
+            .attr('height',w_height)
+            .attr('width',w_width)
+            .style('fill',function(d){ return color(d); })
+            .attr('y',function(d,i){
+              return i*w_height
+            })
+
+          xc++
+          if(xc > Math.ceil(Math.sqrt(count))-1){
+            xc = 0
+            yc++
+          }
+        }
+
+      }
+
+    })
+  })
+})}}
+
+function emptyWeek(){
+  let w = [];
+  for(let wi = 0; wi<7; wi++){
+    let m = []
+    for(let mi = 0; mi < 145; mi++){
+      m.push(0)
+    }
+    w.push(m)
+  }
+  return w
+}
+
+function getCategory(c){
+  if(c == undefined || c == 0 || c == 'undefined'){
+    return 0
+  }else if(!(c in categories)){
+    console.log('not found',c,categories)
+  }else{
+    let cc = categories[c]
+    if(cc.parent == 0){
+      return cc.name
+    }else{
+      return getCategory(cc.parent)
+    }
+  }
+}
+
+</script>
+</body>
+</html>
