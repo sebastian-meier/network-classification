@@ -26,13 +26,17 @@ In my PhD I have been using three tools to test various machine learning techniq
 
 1. TensorFlow (https://www.tensorflow.org/)
 2. WEKA (http://www.cs.waikato.ac.nz/ml/weka/)
-3. Convnet.JS (cs.stanford.edu/people/karpathy/convnetjs/)
+3. Convnet.JS (http://cs.stanford.edu/people/karpathy/convnetjs/)
 
 While TensorFlow is an amazing framework, it is also has a steep learning curve and (if you are not lucky, like me) it can take a while to get it running on your machine.
+
 If you are just starting, I strongly recommend WEKA. Its a bit older than the other two, BUT it has a GUI and can be installed as a standalone JAVA application.
+
 Launch the explorer, pick one of the previously generated CSVs and go nuts on the machine learning techniques. I can recommend to start with a MultilayerPerceptron (10,20,10).
+
 Try the limited CSVs, you will as limitation goes up, you will quickly see how the performance increases.
-If you want do it more automatically, I recommend Covnet.js while not as powerful as TensorFlow, you can do pretty amazing stuff, especially the Automatic example is helpful: cs.stanford.edu/people/karpathy/convnetjs/demo/automatic.html
+
+If you want do it more automatically, I recommend Covnet.js while not as powerful as TensorFlow, you can do pretty amazing stuff, especially the Automatic example is helpful: http://cs.stanford.edu/people/karpathy/convnetjs/demo/automatic.html
 
 #### Visualising the corridor predictions between clusters or locations
 
