@@ -36,7 +36,7 @@ Launch the explorer, pick one of the previously generated CSVs and go nuts on th
 
 Try the limited CSVs, you will as limitation goes up, you will quickly see how the performance increases.
 
-If you want do it more automatically, I recommend Covnet.js while not as powerful as TensorFlow, you can do pretty amazing stuff, especially the Automatic example is helpful: http://cs.stanford.edu/people/karpathy/convnetjs/demo/automatic.html
+If you want do it more programmatically, I recommend Covnet.js while not as powerful as TensorFlow, you can do pretty amazing stuff and its in javascript and it works in node.js (yay), especially the Automatic example is helpful: http://cs.stanford.edu/people/karpathy/convnetjs/demo/automatic.html
 
 #### Visualising the corridor predictions between clusters or locations
 
