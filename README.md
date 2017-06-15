@@ -10,6 +10,16 @@ If the above script was set to output the test results, those can be evaluated a
 
 ### Usage
 
+#### Export CSVs for Machine Learning
+
+The following line will output a series of CSVs with trips.
+In addition to a full set, for each file there is also a filtered version where trip-group occurs at least n-times (1-10).
+The full dataset is also provided in segments (where 1 holds 1/10 of the data, 2 holds 2/10 of the data, n holds n/10 of the data), this can be used to compare predictions over time, as more training data is available.
+```
+node machine_export.js PATH\_TO/DBFILE OUTPUT\_PATH
+```
+Note: no .db on the DBFILE
+
 #### Visualising the corridor predictions between clusters or locations
 
 This script takes every test trajectory apart into 2-minute interval distance steps and visualises the results for each point along the trajectory. Depending on your test dataset's size it generates a whole bunch of PNGs, so better place them in an empty folder.
